@@ -1,0 +1,5 @@
+.env
+/node_modules
+
+# TODO: chequear como servir archivos grandes por red desde ds
+# /music
