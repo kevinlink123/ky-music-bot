@@ -4,18 +4,25 @@
   "description": "A bot to reproduce music in a channel",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc",
+    "dev": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@discordjs/rest": "^2.5.1",
     "@discordjs/voice": "^0.18.0",
-    "discord-api-types": "^0.38.16",
+    "discord-api-types": "^0.38.17",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.1",
     "ffmpeg-static": "^5.2.0",
+    "typescript": "^5.8.3",
+    "youtubei.js": "^15.0.1",
     "yt-search": "^2.13.1",
     "ytdl-core": "^4.11.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
