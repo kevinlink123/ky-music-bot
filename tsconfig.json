@@ -33,6 +33,6 @@
     "emitDecoratorMetadata": true,
     "lib": ["ES2022", "DOM"]
   },
-  "include": ["src/**/*", "types/**/*"],
+  "include": ["src/**/*", "types/**/*", "src/deploy-commands.ts"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
 }
