@@ -1,15 +1,11 @@
 require('dotenv').config();
-import { Innertube } from 'youtubei.js';
-import { Client, GatewayIntentBits, Message, OmitPartialGroupDMChannel } from 'discord.js';
-import { joinVoiceChannel ,createAudioPlayer, createAudioResource, StreamType } from "@discordjs/voice";
+import { Client, GatewayIntentBits, Message, OmitPartialGroupDMChannel, VoiceBasedChannel } from 'discord.js';
+import { joinVoiceChannel ,createAudioPlayer, createAudioResource } from "@discordjs/voice";
 import { Queue, Song } from './types';
-
-// const ytdl = require('ytdl-core');
-// const yts = require('yt-search');
-// const fs = require('fs');
-// const path = require('path');
 import fs from "fs";
 import path from "path";
+import { CONSTANS, PLAY_MESSAGES } from './constans';
+import { exec } from 'youtube-dl-exec';
 
 const client = new Client({
   intents: [
@@ -23,25 +19,12 @@ const client = new Client({
 
 //TODO: AGREGAR TIPO MOGOLICO!
 // VARIABLES GLOBALES
-//@ts-ignore
-let youtube;
 // let activePlayers = new Map();
 const player = createAudioPlayer();
 const queue = new Map<string, Queue>();
 
-// Inicializar YouTube.js al iniciar el bot
-async function initializeYoutube() {
-  youtube = await Innertube.create({
-    lang: 'es',
-    location: 'ES',
-    retrieve_player: true
-  });
-  console.log('YouTube.js inicializado correctamente');
-}
-
 client.once('ready', async () => {
   console.log(`Bot conectado como ${client.user?.tag}`);
-	await initializeYoutube();
 });
 
 client.on('messageCreate', async message => {
@@ -62,58 +45,53 @@ client.on('messageCreate', async message => {
   }
 
   switch (command) {
-    case 'local':
-      try {
-        const songPath = path.join(__dirname, "..", "..", "music", "test.mp3");
-        if(!fs.existsSync(songPath)) {
-          return message.reply("Che boludito, no existe el archivo que me estas pidiendo.");
-        }
-
-        const connection = joinVoiceChannel({
-          channelId: voiceChannel.id,
-          guildId: voiceChannel.guild.id,
-          adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-        });
-        const queueContruct: Queue = {
-          textChannel: message.channel,
-          voiceChannel: voiceChannel,
-          connection: connection,
-          songs: [],
-          player: player,
-          playing: true
-        };
-        queue.set(message.guild?.id, queueContruct);
-        
-        const resource = createAudioResource(songPath);
-        player.play(resource);
-        connection.subscribe(player);
-
-        message.reply('Reproduciendo "falopa y cristal"');
-
-        player.on("error", (error: any) => {
-          console.log(error)
-          message.channel.send('Ocurrió un error al reproducir la canción');
-          connection.destroy();
-        });
-
-      } catch (error) {
-        console.log(error)
-        message.reply('Ocurrió un error al reproducir la música local pa!');
+    case 'random':
+      if(!fs.existsSync(CONSTANS.MUSIC_DIR)) {
+        await message.reply("No descargaste nada todavia... tus viejos son primos?? usa el comando !update seguido de alguna url de playlist de youtube para descargar musica local.");
+        return;
       }
+
+      playLocalRandom(message, voiceChannel);
+      break;
+
+    case 'update':
+      const playlistUrl = args[0];
+      if(!playlistUrl) {
+        return (await message.reply("Una gaver tu url")).reply("matate y subilo a twitter");
+      }
+
+      console.log(validateUrl(playlistUrl));
+      await downloadFromYTPlaylist(playlistUrl);
+      break;
+
+    case 'local':
+      const songName = args.join(" ").toLowerCase();
+      if(!songName) {
+        return (await message.reply("Una vez mas que me pedis una cancion y no me decis cual es y me garcho a tu vieja")).reply("ULTIMO AVISO");
+      }
+
+      if(!fs.existsSync(CONSTANS.MUSIC_DIR)) {
+        await message.reply("No descargaste nada todavia... tus viejos son primos?? usa el comando !update seguido de alguna url de playlist de youtube para descargar musica local.");
+        return;
+      }
+      
+      //TODO: CAMBIAR LOCACION DE LA CARPETA MUSIC. PROBAR CREAR UNA VARIABLE DE ENTORNO CONFIGURABLE PARA SETEAR LA CARPETA
+      // const songPath = path.join(CONSTANS.MUSIC_DIR, `${songName}.mp3`);
+      const foundSong = searchSongByName(songName);
+      if (!foundSong) {
+        return message.reply("No hay ninguna cancion con un nombre como ese. Aprende a escribir pa");
+      }
+      const songPath = path.join(CONSTANS.MUSIC_DIR, foundSong);
+      if(!fs.existsSync(songPath)) {
+        return message.reply("Che boludito, no existe el archivo que me estas pidiendo.");
+      }
+
+      playLocalSong(songPath, voiceChannel, message);
       break;
 
     case 'play':
-      if (!args.length) {
-        return message.reply('Debes proporcionar un enlace de YouTube o el nombre de una canción!');
-      }
-      
       try {
-        const url = args[0];
-        const videoId = extractYouTubeId(url, message);
-        console.log(videoId);
         return message.reply('Esta funcion fue desactivada temporalmente');
-        // await playYouTubeVideo(voiceChannel, args[0], message);
-
       } catch (error) {
         console.error(error);
         message.reply('Ocurrió un error al reproducir la música!');
@@ -139,177 +117,114 @@ client.on('messageCreate', async message => {
   }
 });
 
-function extractYouTubeId(fullUrl: string, message: OmitPartialGroupDMChannel<Message>) {
-	// const fullUrl = "https://www.youtube.com/watch?v=Rao8lCUQRn8&list=PL04E9tY2s7ooVFixdEc0c_Z_caYoddbE2";
-	if (fullUrl.includes("youtu.be")) {
-		console.log(fullUrl.slice(fullUrl.lastIndexOf("/") + 1));
-		return fullUrl.slice(fullUrl.lastIndexOf("/") + 1);
+function searchSongByName(songName: string) {
+  const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
+  const foundSong = localSongs.find((song: string) => {
+    return song.toLowerCase().includes(songName);
+  })
 
-	} else if (fullUrl.includes('watch?v=')) {
-		return fullUrl.slice(fullUrl.indexOf("=") + 1, fullUrl.indexOf("&"));
-
-	} else {
-		console.log("DAME UN LINK COMO LA GENTE MOGOLICO");
-		message.reply("DAME UN LINK COMO LA GENTE MOGOLICO");
-	}
+  return foundSong;
 }
 
-// async function playYouTubeVideo(voiceChannel, query, message) {
-//   if (!voiceChannel) {
-//     return message.channel.send('Debes estar en un canal de voz para usar este comando!');
-//   }
+async function playLocalRandom(message: OmitPartialGroupDMChannel<Message>, voiceChannel: VoiceBasedChannel) {
+  const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
+  const randomSongName = localSongs[Math.floor(Math.random() * (localSongs.length + 1))];
+  const songPath = path.join(CONSTANS.MUSIC_DIR, randomSongName);
 
-//   try {
-//     // Extraer ID si es URL
-//     const videoId = extractYouTubeId(query, message) || query;
+  const connection = joinVoiceChannel({
+    channelId: voiceChannel.id,
+    guildId: voiceChannel.guild.id,
+    adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+  });
+  const queueContruct: Queue = {
+    textChannel: message.channel,
+    voiceChannel: voiceChannel,
+    connection: connection,
+    songs: [],
+    player: player,
+    playing: true
+  };
+  queue.set(message.guild?.id!, queueContruct);
+  
+  const resource = createAudioResource(songPath);
+  player.play(resource);
+  connection.subscribe(player);
 
-//     // Obtener información del video
-//     const info = await youtube.getInfo(videoId);
-// 		console.log(info);
+  message.reply(`Reproduciendo ** ${randomSongName} **`);
+
+  player.on("error", (error: any) => {
+    console.log(error)
+    message.channel.send('Ocurrió un error al reproducir la canción');
+    connection.destroy();
+  });
+}
+
+async function downloadFromYTPlaylist(playlistUrl: string) {
+  try {
+    if (!fs.existsSync(CONSTANS.MUSIC_DIR)) {
+      fs.mkdirSync(CONSTANS.MUSIC_DIR, { recursive: true });
+    }
+
+    console.log('Descargando playlist...');
+    await exec(playlistUrl, {
+      extractAudio: true,
+      audioFormat: 'mp3',
+      output: path.join(CONSTANS.MUSIC_DIR, '%(title)s.%(ext)s'),
+      yesPlaylist: true,
+      quiet: true
+    });
+    console.log('¡Descarga completada!');
+
+    return fs.readdirSync(CONSTANS.MUSIC_DIR)
+      .filter(file => file.endsWith('.mp3'))
+      .map(file => path.join(CONSTANS.MUSIC_DIR, file));
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function validateUrl(url: string): boolean {
+  const isYoutubeLink = url.includes("youtube.com") || url.includes("youtu.be");
+  const isPlaylist = url.includes("&list") || url.includes("playlist");
+  return isYoutubeLink && isPlaylist;
+}
+
+function playLocalSong(songPath: string, voiceChannel: VoiceBasedChannel, message: OmitPartialGroupDMChannel<Message>) {
+  try {
+    const connection = joinVoiceChannel({
+      channelId: voiceChannel.id,
+      guildId: voiceChannel.guild.id,
+      adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+    });
+    const queueContruct: Queue = {
+      textChannel: message.channel,
+      voiceChannel: voiceChannel,
+      connection: connection,
+      songs: [],
+      player: player,
+      playing: true
+    };
+    queue.set(message.guild?.id!, queueContruct);
     
-//     if (!info || !info.basic_info) {
-//       return message.channel.send('No se pudo encontrar el video.');
-//     }
+    const resource = createAudioResource(songPath);
+    player.play(resource);
+    connection.subscribe(player);
 
-//     // Obtener el mejor formato de audio
-//     const format = info.chooseFormat({
-//       type: 'audio',
-//       quality: 'best'
-//     });
+    const replyMessage = PLAY_MESSAGES[Math.floor(Math.random() * PLAY_MESSAGES.length)];
 
-//     if (!format) {
-//       return message.channel.send('No se encontró un formato de audio válido.');
-//     }
+    message.reply(`${replyMessage} ** ${songPath.slice(songPath.lastIndexOf("/") + 1, songPath.lastIndexOf("."))} **`);
 
-//     // Crear conexión de voz
-//     const connection = joinVoiceChannel({
-//       channelId: voiceChannel.id,
-//       guildId: voiceChannel.guild.id,
-//       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-//     });
+    player.on("error", (error: any) => {
+      console.log(error)
+      message.channel.send('Ocurrió un error al reproducir la canción');
+      connection.destroy();
+    });
 
-//     // Crear reproductor de audio
-		
-// 		const player = createAudioPlayer();
-// 		// const stream = ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio' });
-//     const resource = createAudioResource(query, {
-
-//     });
-
-//     player.play(resource);
-//     connection.subscribe(player);
-
-//     // Guardar el reproductor activo
-//     activePlayers.set(voiceChannel.guild.id, { player, connection });
-
-//     // Manejar eventos del reproductor
-//     player.on('error', error => {
-//       console.error('Error en el reproductor:', error);
-//       message.channel.send('Ocurrió un error al reproducir la música.');
-//     });
-
-//     // player.on('idle', () => {
-//     //   connection.destroy();
-//     //   activePlayers.delete(voiceChannel.guild.id);
-//     // });
-
-//     return message.channel.send(`APRETEN EL ORTO QUE SUENA: **${info.basic_info.title}**`);
-
-//   } catch (error) {
-//     console.error('Error al reproducir:', error);
-//     return message.channel.send('Ocurrió un error al intentar reproducir el video.');
-//   }
-// }
-
-// function playLocalFile(message: OmitPartialGroupDMChannel<Message>, voiceChannel: VoiceBasedChannel, filePath: string) {
-//   if (!message.guild || !message.guild.id) {
-//     message.reply("El server no existe o no esta disponible pa");
-//     return;
-//   }
-//   const serverQueue = queue.get(message.guild?.id);
-  
-//   const song: Song = {
-//     title: path.basename(filePath),
-//     url: filePath,
-//     duration: 0,
-//     local: true
-//   };
-  
-//   if (!serverQueue) {
-//     const queueContruct: Queue = {
-//       textChannel: message.channel,
-//       voiceChannel: voiceChannel,
-//       connection: null,
-//       songs: [],
-//       player: player,
-//       playing: true
-//     };
-    
-//     queue.set(message.guild?.id, queueContruct);
-//     queueContruct.songs.push(song);
-    
-//     try {
-//       const connection = joinVoiceChannel({
-//         channelId: voiceChannel.id,
-//         guildId: voiceChannel.guild.id,
-//         adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-//       });
-      
-//       queueContruct.connection = connection;
-//       playSong(message, message.guild?.id!, queueContruct.songs[0]);
-//     } catch (error) {
-//       console.error(error);
-//       queue.delete(message.guild?.id);
-//       return message.reply('No pude unirme al canal de voz!');
-//     }
-//   } else {
-//     serverQueue.songs.push(song);
-//     return message.channel.send(`**${song.title}** ha sido añadida a la cola!`);
-//   }
-// }
-
-// function playSong(message: OmitPartialGroupDMChannel<Message>,guildId: string, song: Song) {
-//   const serverQueue = queue.get(guildId);
-//   if (!serverQueue) {
-//     message.reply("LA QUEUE NO EXISTE DOWN, ARMALA BIEN");
-//     return;
-//   }
-  
-//   if (!song) {
-//     //@ts-expect-error
-//     serverQueue.voiceChannel.leave();
-//     queue.delete(guildId);
-//     return;
-//   }
-  
-//   let resource;
-  
-//   if (song.local) {
-//     resource = createAudioResource(song.url);
-//   } else {
-//     const stream = ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio' });
-//     resource = createAudioResource(stream);
-//   }
-  
-//   serverQueue.player.play(resource);
-
-// 	//TODO: BUSCAR SOBRE OBSERVATION PATTERS DE DS
-//   serverQueue.connection.subscribe(serverQueue.player);
-  
-//   serverQueue.textChannel.send(`Reproduciendo ahora: **${song.title}**`);
-  
-//   serverQueue.player.on('idle', () => {
-//     serverQueue.songs.shift();
-//     playSong(guildId, serverQueue.songs[0]);
-//   });
-  
-//   serverQueue.player.on('error', (error: any) => {
-//     console.error(error);
-//     serverQueue.textChannel.send('Ocurrió un error al reproducir la canción!');
-//     serverQueue.songs.shift();
-//     playSong(guildId, serverQueue.songs[0]);
-//   });
-// }
+  } catch (error) {
+    console.log(error)
+    message.reply('Ocurrió un error al reproducir la música local pa!');
+  }
+}
 
 function stopPlayer(guildId: string = "") {
   const serverQueue = queue.get(guildId);
