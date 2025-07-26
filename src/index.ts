@@ -1,14 +1,18 @@
 require('dotenv').config();
-import { Client, GatewayIntentBits, Message, OmitPartialGroupDMChannel, VoiceBasedChannel } from 'discord.js';
+import { CacheType, Client, Collection, Events, GatewayIntentBits, Interaction, Message, MessageFlags, OmitPartialGroupDMChannel, VoiceBasedChannel } from 'discord.js';
 import { joinVoiceChannel ,createAudioPlayer, createAudioResource } from "@discordjs/voice";
-import { Queue, Song } from './types';
+import { Command, Queue, Song } from './types';
 import fs from "fs";
 import path from "path";
 import { CONSTANS, PLAY_MESSAGES } from './constans';
 import { downloadFromYTPlaylist, flushMusic } from './utils/localHandler';
 import { searchSongByName } from './utils/localHandler';
 
-const client = new Client({
+class DSClient extends Client {
+  commands = new Collection();
+}
+
+const client = new DSClient({
   intents: [
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
@@ -17,6 +21,24 @@ const client = new Client({
 		GatewayIntentBits.GuildMembers,
 	],
 });
+
+const foldersPath = path.join(__dirname, "commands");
+const commandFolders = fs.readdirSync(foldersPath);
+
+for (const folder of commandFolders) {
+	const commandsPath = path.join(foldersPath, folder);
+	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+	for (const file of commandFiles) {
+		const filePath = path.join(commandsPath, file);
+		const command: Command = require(filePath);
+		// Set a new item in the Collection with the key as the command name and the value as the exported module
+		if ('data' in command && 'execute' in command) {
+			client.commands.set(command.data.name, command);
+		} else {
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		}
+	}
+}
 
 //TODO: AGREGAR TIPO MOGOLICO!
 // VARIABLES GLOBALES
@@ -27,6 +49,26 @@ const queue = new Map<string, Queue>();
 client.once('ready', async () => {
   console.log(`Bot conectado como ${client.user?.tag}`);
 });
+
+client.on(Events.InteractionCreate, async (interaction: Interaction<CacheType>) => {
+  if (!interaction.isChatInputCommand()) return;
+  const command = (interaction.client as DSClient).commands.get(interaction.commandName) as Command;
+
+  if (!command) {
+    console.error("Que queres?? Pone bien el omando mogolico");
+  }
+
+  try {
+    await command.execute(interaction);
+  } catch(error) {
+    console.error(error);
+    if(interaction.replied || interaction.deferred) {
+      await interaction.followUp({ content: "Naaaa fallo la ejecucion del comando", flags: MessageFlags.Ephemeral });
+    } else {
+      await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
+    }
+  }
+})
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
