@@ -8,6 +8,6 @@ module.exports = {
 	async execute(interaction: ChatInputCommandInteraction<CacheType>) {
 		// interaction.user is the object representing the User who ran the command
 		// interaction.member is the GuildMember object, which represents the user in the specific guild
-		await interaction.reply(`Lo conozco al down este, es ${interaction.user.username}, esta aca desde ${interaction.guild?.joinedAt}. Desde el mesozoico mas o menos.`);
+		await interaction.reply(`Lo conozco al down este, es **${interaction.user.username}**. Hace una banda esta aca este, desde el mesozoico mas o menos.`);
 	},
 };
