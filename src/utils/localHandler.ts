@@ -49,6 +49,6 @@ function musicExists() {
 	return fs.existsSync(CONSTANS.MUSIC_DIR);
 }
 
-function isMusicInFolder() {
+export function isMusicInFolder() {
 	return musicExists() && fs.readdirSync(CONSTANS.MUSIC_DIR).some(fileName => fileName.endsWith('.mp3'));
 }
