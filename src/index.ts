@@ -5,7 +5,8 @@ import { Queue, Song } from './types';
 import fs from "fs";
 import path from "path";
 import { CONSTANS, PLAY_MESSAGES } from './constans';
-import { exec } from 'youtube-dl-exec';
+import { downloadFromYTPlaylist } from './utils/localHandler';
+import { searchSongByName } from './utils/localHandler';
 
 const client = new Client({
   intents: [
@@ -66,16 +67,25 @@ client.on('messageCreate', async message => {
 
       playLocalRandom(message, voiceChannel);
       break;
-
+      
     case 'update':
       const playlistUrl = args[0];
       if(!playlistUrl) {
         return (await message.reply("Una gaver tu url")).reply("matate y subilo a twitter");
       }
 
-      console.log(validateUrl(playlistUrl));
-      await downloadFromYTPlaylist(playlistUrl);
-      break;
+      try {
+        console.log(validateUrl(playlistUrl));
+        message.channel.send("Ahi me puse a descargar los archivos. Podria tardar un rato...");
+        message.channel.send("Yo aviso por aca cuando termine");
+        await downloadFromYTPlaylist(playlistUrl);
+        message.channel.send("LISTO VIEJA TODO ARREGLADO");
+        break;
+      } catch (error) {
+        message.channel.send("Naaaa esta poronga no funciona, reclamente al obeso compu");
+        console.log(error)
+        break;
+      }
 
     case 'local':
       const songName = args.join(" ").toLowerCase();
@@ -130,15 +140,6 @@ client.on('messageCreate', async message => {
   }
 });
 
-function searchSongByName(songName: string) {
-  const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
-  const foundSong = localSongs.find((song: string) => {
-    return song.toLowerCase().includes(songName);
-  })
-
-  return foundSong;
-}
-
 async function playLocalRandom(message: OmitPartialGroupDMChannel<Message>, voiceChannel: VoiceBasedChannel) {
   const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
   const randomSongName = localSongs[Math.floor(Math.random() * (localSongs.length + 1))];
@@ -170,30 +171,6 @@ async function playLocalRandom(message: OmitPartialGroupDMChannel<Message>, voic
     message.channel.send('Ocurrió un error al reproducir la canción');
     connection.destroy();
   });
-}
-
-async function downloadFromYTPlaylist(playlistUrl: string) {
-  try {
-    if (!fs.existsSync(CONSTANS.MUSIC_DIR)) {
-      fs.mkdirSync(CONSTANS.MUSIC_DIR, { recursive: true });
-    }
-
-    console.log('Descargando playlist...');
-    await exec(playlistUrl, {
-      extractAudio: true,
-      audioFormat: 'mp3',
-      output: path.join(CONSTANS.MUSIC_DIR, '%(title)s.%(ext)s'),
-      yesPlaylist: true,
-      quiet: true
-    });
-    console.log('¡Descarga completada!');
-
-    return fs.readdirSync(CONSTANS.MUSIC_DIR)
-      .filter(file => file.endsWith('.mp3'))
-      .map(file => path.join(CONSTANS.MUSIC_DIR, file));
-  } catch (error) {
-    console.log(error);
-  }
 }
 
 function validateUrl(url: string): boolean {
@@ -270,3 +247,8 @@ function showQueue(guildId: string = "", message: OmitPartialGroupDMChannel<Mess
 
 // Iniciar el bot con tu token
 client.login(process.env.DS_TOKEN);
+
+function flushMusic() {
+
+  throw new Error('Function not implemented.');
+}
