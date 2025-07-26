@@ -5,7 +5,7 @@ import { Queue, Song } from './types';
 import fs from "fs";
 import path from "path";
 import { CONSTANS, PLAY_MESSAGES } from './constans';
-import { downloadFromYTPlaylist } from './utils/localHandler';
+import { downloadFromYTPlaylist, flushMusic } from './utils/localHandler';
 import { searchSongByName } from './utils/localHandler';
 
 const client = new Client({
@@ -67,7 +67,18 @@ client.on('messageCreate', async message => {
 
       playLocalRandom(message, voiceChannel);
       break;
-      
+
+    case 'flush':
+      try {
+        flushMusic(message);
+
+      } catch(error) {
+        console.error("Error al intentar eliminar la carpeta");
+        console.error(error);
+      }
+
+      break;
+
     case 'update':
       const playlistUrl = args[0];
       if(!playlistUrl) {
@@ -247,8 +258,3 @@ function showQueue(guildId: string = "", message: OmitPartialGroupDMChannel<Mess
 
 // Iniciar el bot con tu token
 client.login(process.env.DS_TOKEN);
-
-function flushMusic() {
-
-  throw new Error('Function not implemented.');
-}
