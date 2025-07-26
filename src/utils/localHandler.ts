@@ -1,3 +1,4 @@
+import { Message, OmitPartialGroupDMChannel } from "discord.js";
 import { CONSTANS } from "../constans";
 import fs from 'fs';
 import path from "path";
@@ -30,4 +31,24 @@ export async function downloadFromYTPlaylist(playlistUrl: string) {
 	return fs.readdirSync(CONSTANS.MUSIC_DIR)
 		.filter(file => file.endsWith('.mp3'))
 		.map(file => path.join(CONSTANS.MUSIC_DIR, file));
+}
+
+export function flushMusic(message: OmitPartialGroupDMChannel<Message>) {
+	console.log(CONSTANS.MUSIC_DIR);
+	if (!isMusicInFolder()) {
+		message.channel.send("No me dieron nada para descargar todavia autistas");
+		return;
+	}
+	message.channel.send("YA MISMO ELIMINO TODO LOCO, ME HINCHE LAS PELOTAS");
+	fs.rmSync(CONSTANS.MUSIC_DIR, { recursive: true, force: true });
+	message.channel.send("Ahi termine, todo limpiecito");
+}
+
+
+function musicExists() {
+	return fs.existsSync(CONSTANS.MUSIC_DIR);
+}
+
+function isMusicInFolder() {
+	return musicExists() && fs.readdirSync(CONSTANS.MUSIC_DIR).some(fileName => fileName.endsWith('.mp3'));
 }
