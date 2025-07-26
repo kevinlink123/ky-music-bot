@@ -45,6 +45,19 @@ client.on('messageCreate', async message => {
   }
 
   switch (command) {
+    case 'help':
+      message.reply("Parece que me toca laburar otra vez.");
+      message.channel.send("Yo manejo la musica vieja, tengo varios vinilos (archivos de musica) a mi disposicion (mi entorno local).")
+      message.channel.send("Escucho a varios comandos");
+      message.channel.send("Todos los comandos empiezan con '!' seguido del comando en si");
+      message.channel.send("Para agregar mas canciones, usa el comando **'!update [url]'**. Donde '[url]' es un link de una playlist de youtube. Con esto descargo el audio de los videos y los guardo para poder reproducirlos luego.");
+      message.channel.send("Para reproducir una cancion cualquiera usa **'!random'**");
+      message.channel.send("Para reproducir alguna cancion en particular usa **'!local [nombre_de_cancion]'**, donde [nombre_de_cancion] es el nombre o nombre parcial por el cual buscare el tema. NOTA: Recuerden que busco canciones por el nombre del archivo.");
+      message.channel.send("Para parar la cancion actual usa el comando **'!stop'**");
+      message.channel.send("Los comandos **'!play'**, **'!skip'** y **'!queue'** estan disponibles pero siguen en desarrollo")
+      message.channel.send("(Consultale al gordo kocho sobre el estado las mismas, yo no tengo idea, no soy de por aca).");
+      break;
+
     case 'random':
       if(!fs.existsSync(CONSTANS.MUSIC_DIR)) {
         await message.reply("No descargaste nada todavia... tus viejos son primos?? usa el comando !update seguido de alguna url de playlist de youtube para descargar musica local.");
