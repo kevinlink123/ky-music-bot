@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { CONSTANS } from '../../constans';
 import fs from 'fs';
-import { isMusicInFolder } from '@/utils/localHandler';
+import { isMusicInFolder } from '../../utils/localHandler';
 
 module.exports = {
 	data: new SlashCommandBuilder()
