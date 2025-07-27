@@ -5,7 +5,7 @@ import { Command, Queue, Song } from './types';
 import fs from "fs";
 import path from "path";
 import { CONSTANS, PLAY_MESSAGES } from './constans';
-import { downloadFromYTPlaylist, flushMusic } from './utils/localHandler';
+import { flushMusic } from './utils/localHandler';
 import { searchSongByName } from './utils/localHandler';
 
 class DSClient extends Client {
