@@ -8,7 +8,8 @@
     "build": "tsc",
     "dev": "nodemon dist/src/index.js",
     "build:watch": "tsc -w",
-    "deploy:commands": "npm run build && node dist/src/deploy-commands.js"
+    "deploy:commands": "ts-node ./cli/deploy-commands.ts",
+    "commands": "ts-node ./cli/manageCommands.ts"
   },
   "author": "",
   "license": "ISC",
