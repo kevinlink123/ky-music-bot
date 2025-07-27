@@ -55,7 +55,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction<CacheType>) 
   const command = (interaction.client as DSClient).commands.get(interaction.commandName) as Command;
 
   if (!command) {
-    console.error("Que queres?? Pone bien el omando mogolico");
+    console.error("Que queres?? Pone bien el comando mogolico");
   }
 
   try {
@@ -120,25 +120,6 @@ client.on('messageCreate', async message => {
       }
 
       break;
-
-    case 'update':
-      const playlistUrl = args[0];
-      if(!playlistUrl) {
-        return (await message.reply("Una gaver tu url")).reply("matate y subilo a twitter");
-      }
-
-      try {
-        console.log(validateUrl(playlistUrl));
-        message.channel.send("Ahi me puse a descargar los archivos. Podria tardar un rato...");
-        message.channel.send("Yo aviso por aca cuando termine");
-        await downloadFromYTPlaylist(playlistUrl);
-        message.channel.send("LISTO VIEJA TODO ARREGLADO");
-        break;
-      } catch (error) {
-        message.channel.send("Naaaa esta poronga no funciona, reclamente al obeso compu");
-        console.log(error)
-        break;
-      }
 
     case 'local':
       const songName = args.join(" ").toLowerCase();
