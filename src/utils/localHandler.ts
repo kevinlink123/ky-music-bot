@@ -10,7 +10,7 @@ export function searchSongByName(songName: string) {
 			return song.toLowerCase().includes(songName);
 	})
 
-	return foundSong;
+	return foundSong ? foundSong : "";
 }
 
 export async function downloadFromYTPlaylist(playlistUrl: string) {
