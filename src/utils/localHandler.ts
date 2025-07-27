@@ -52,3 +52,9 @@ function musicExists() {
 export function isMusicInFolder() {
 	return musicExists() && fs.readdirSync(CONSTANS.MUSIC_DIR).some(fileName => fileName.endsWith('.mp3'));
 }
+
+export function validateUrl(url: string): boolean {
+  const isYoutubeLink = url.includes("youtube.com") || url.includes("youtu.be");
+  const isPlaylist = url.includes("&list") || url.includes("playlist");
+  return isYoutubeLink && isPlaylist;
+}
