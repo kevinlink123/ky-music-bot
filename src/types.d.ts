@@ -4,7 +4,7 @@ import { Channel, VoiceBasedChannel } from "discord.js";
 
 export type Command = {
   data: SlashCommandBuilder;
-  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  execute: (interaction: ChatInputCommandInteraction, player?: AudioPlayer) => Promise<void>;
 };
 
 export interface Queue {
