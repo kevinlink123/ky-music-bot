@@ -4,19 +4,22 @@ import fs from 'node:fs';
 import path from 'node:path'
 config();
 
-const commands = [];
+const commands: { data: any, execute: () => any }[] = [];
 // Grab all the command folders from the commands directory you created earlier
-const foldersPath = path.join(__dirname, 'commands');
+const foldersPath = path.join(__dirname, '..', 'src', 'commands');
+console.log(foldersPath);
 const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
 	// Grab all the command files from the commands directory you created earlier
 	const commandsPath = path.join(foldersPath, folder);
-	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+	// Notice that here we are looking for .ts files (in the index we search for .js files 'cause after comp all files are .js)
+	// This is because we use ts-node to execute scripts 
+	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 	// Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
 	for (const file of commandFiles) {
 		const filePath = path.join(commandsPath, file);
-		const command = require(filePath);
+		const command: { data: any, execute: () => any } = require(filePath);
 		if ('data' in command && 'execute' in command) {
 			commands.push(command.data.toJSON());
 		} else {
