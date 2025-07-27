@@ -16,14 +16,17 @@
     "@discordjs/opus": "^0.10.0",
     "@discordjs/rest": "^2.5.1",
     "@discordjs/voice": "^0.18.0",
+    "commander": "^14.0.0",
     "discord-api-types": "^0.38.17",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.1",
     "ffmpeg-static": "^5.2.0",
-    "typescript": "^5.8.3",
     "youtube-dl-exec": "^3.0.22"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@types/node": "^24.1.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }
