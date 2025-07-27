@@ -54,12 +54,27 @@ client.on(Events.InteractionCreate, async (interaction: Interaction<CacheType>) 
   if (!interaction.isChatInputCommand()) return;
   const command = (interaction.client as DSClient).commands.get(interaction.commandName) as Command;
 
+  if(!interaction.inGuild()) {
+    await interaction.reply({
+      content: "QUE ME MANDAS DM MOGOLICO, DESDE EL SERVER HABLAME NONAS. LARVA",
+      flags: MessageFlags.Ephemeral
+    });
+    return;
+  }
+  if(!interaction.member) {
+    await interaction.reply({
+      content: "NO SE QUIEN ME HABLA, ANDATEEEEEE",
+      flags: MessageFlags.Ephemeral
+    });
+    return;
+  }
+
   if (!command) {
     console.error("Que queres?? Pone bien el comando mogolico");
   }
 
   try {
-    await command.execute(interaction);
+    await command.execute(interaction, player);
   } catch(error) {
     console.error(error);
     if(interaction.replied || interaction.deferred) {
