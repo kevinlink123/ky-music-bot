@@ -2,7 +2,7 @@ import path from 'node:path';
 import { CONSTANS, PLAY_MESSAGES } from '../../constans';
 import { searchSongByName } from '../../utils/localHandler';
 import { AudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
-import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, VoiceBasedChannel, GuildMember, TextChannel } from 'discord.js';
+import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, GuildMember, TextChannel } from 'discord.js';
 
 module.exports = {
   data: new SlashCommandBuilder()
