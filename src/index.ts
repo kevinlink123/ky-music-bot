@@ -136,40 +136,6 @@ client.on('messageCreate', async message => {
 
       break;
 
-    case 'local':
-      const songName = args.join(" ").toLowerCase();
-      if(!songName) {
-        return (await message.reply("Una vez mas que me pedis una cancion y no me decis cual es y me garcho a tu vieja")).reply("ULTIMO AVISO");
-      }
-
-      if(!fs.existsSync(CONSTANS.MUSIC_DIR)) {
-        await message.reply("No descargaste nada todavia... tus viejos son primos?? usa el comando !update seguido de alguna url de playlist de youtube para descargar musica local.");
-        return;
-      }
-      
-      //TODO: CAMBIAR LOCACION DE LA CARPETA MUSIC. PROBAR CREAR UNA VARIABLE DE ENTORNO CONFIGURABLE PARA SETEAR LA CARPETA
-      // const songPath = path.join(CONSTANS.MUSIC_DIR, `${songName}.mp3`);
-      const foundSong = searchSongByName(songName);
-      if (!foundSong) {
-        return message.reply("No hay ninguna cancion con un nombre como ese. Aprende a escribir pa");
-      }
-      const songPath = path.join(CONSTANS.MUSIC_DIR, foundSong);
-      if(!fs.existsSync(songPath)) {
-        return message.reply("Che boludito, no existe el archivo que me estas pidiendo.");
-      }
-
-      playLocalSong(songPath, voiceChannel, message);
-      break;
-
-    case 'play':
-      try {
-        return message.reply('Esta funcion fue desactivada temporalmente');
-      } catch (error) {
-        console.error(error);
-        message.reply('Ocurrió un error al reproducir la música!');
-      }
-      break;
-      
     case 'stop':
       stopPlayer(message.guild?.id);
       message.reply('Reproducción detenida!');
