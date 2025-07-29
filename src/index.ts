@@ -42,7 +42,7 @@ for (const folder of commandFolders) {
 
 //TODO: AGREGAR TIPO MOGOLICO!
 // VARIABLES GLOBALES
-// let activePlayers = new Map();
+let activePlayers = new Map<string, Queue>();
 const player = createAudioPlayer();
 const queue = new Map<string, Queue>();
 
