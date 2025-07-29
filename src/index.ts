@@ -157,7 +157,7 @@ client.on('messageCreate', async message => {
 
 async function playLocalRandom(message: OmitPartialGroupDMChannel<Message>, voiceChannel: VoiceBasedChannel) {
   const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
-  const randomSongName = localSongs[Math.floor(Math.random() * (localSongs.length + 1))];
+  const randomSongName = localSongs[Math.floor(Math.random() * (localSongs.length))];
   const songPath = path.join(CONSTANS.MUSIC_DIR, randomSongName);
 
   const connection = joinVoiceChannel({
