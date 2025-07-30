@@ -23,7 +23,7 @@ module.exports = {
       channel.send("Ahi me puse a descargar los archivos. Podria tardar un rato...");
       channel.send("Yo aviso por aca cuando termine");
 
-      await downloadFromYTPlaylist(ytUrl);
+      await downloadFromYTPlaylist(ytUrl, interaction.guildId!);
 
       channel.send("LISTO PA TODO DESCARGADITO (como la cola de tu mama)");
 

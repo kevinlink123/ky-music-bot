@@ -2,6 +2,7 @@ import { CacheType, ChatInputCommandInteraction, SlashCommandBuilder } from 'dis
 import { CONSTANS } from '../../constans';
 import fs from 'fs';
 import { isMusicInFolder } from '../../utils/localHandler';
+import path from 'path';
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -9,14 +10,14 @@ module.exports = {
 		.setDescription('Muestra por mensajes las canciones disponibles'),
 	async execute(interaction: ChatInputCommandInteraction<CacheType>	) {
 		// interaction.guild is the object representing the Guild in which the command was run
-		if (!isMusicInFolder()) {
+		if (!isMusicInFolder(interaction.guildId!)) {
 			await interaction.reply("No descargaron nada todavia mogodowns");
 			return;	
 		}
 
 		await interaction.deferReply();
 		const message = ['**Todas estas canciones tengo guardadas:**'];
-		const fileNames = fs.readdirSync(CONSTANS.MUSIC_DIR);
+		const fileNames = fs.readdirSync(path.join(CONSTANS.MUSIC_DIR, interaction.guildId!));
 		for (const file of fileNames) {
 			message.push(file.slice(0, file.lastIndexOf(".")));
 		}

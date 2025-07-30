@@ -4,38 +4,40 @@ import fs from 'fs';
 import path from "path";
 import { exec } from "youtube-dl-exec";
 
-export function searchSongByName(songName: string) {
-	const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
+export function searchSongByName(songName: string, serverId: string) {
+	const serverMusicPath = path.join(CONSTANS.MUSIC_DIR, serverId);
+	const localSongs = fs.readdirSync(serverMusicPath);
 	const foundSong = localSongs.find((song: string) => {
 			return song.toLowerCase().includes(songName);
-	})
+	});
 
-	return foundSong ? foundSong : "";
+	return foundSong ? path.join(serverMusicPath, foundSong) : "";
 }
 
-export async function downloadFromYTPlaylist(playlistUrl: string) {
-	if (!fs.existsSync(CONSTANS.MUSIC_DIR)) {
-		fs.mkdirSync(CONSTANS.MUSIC_DIR, { recursive: true });
+export async function downloadFromYTPlaylist(playlistUrl: string, serverId: string) {
+	const serverMusicFolder = path.join(CONSTANS.MUSIC_DIR, serverId);
+	if (!fs.existsSync(serverMusicFolder)) {
+		fs.mkdirSync(serverMusicFolder, { recursive: true });
 	}
 
 	console.log('Descargando playlist...');
 	await exec(playlistUrl, {
 		extractAudio: true,
 		audioFormat: 'mp3',
-		output: path.join(CONSTANS.MUSIC_DIR, '%(title)s.%(ext)s'),
+		output: path.join(serverMusicFolder, '%(title)s.%(ext)s'),
 		yesPlaylist: true,
 		quiet: true
 	});
 	console.log('¡Descarga completada!');
 
-	return fs.readdirSync(CONSTANS.MUSIC_DIR)
+	return fs.readdirSync(serverMusicFolder)
 		.filter(file => file.endsWith('.mp3'))
-		.map(file => path.join(CONSTANS.MUSIC_DIR, file));
+		.map(file => path.join(serverMusicFolder, file));
 }
 
 export function flushMusic(message: OmitPartialGroupDMChannel<Message>) {
 	console.log(CONSTANS.MUSIC_DIR);
-	if (!isMusicInFolder()) {
+	if (!isMusicInFolder(message.guildId!)) {
 		message.channel.send("No me dieron nada para descargar todavia autistas");
 		return;
 	}
@@ -44,13 +46,10 @@ export function flushMusic(message: OmitPartialGroupDMChannel<Message>) {
 	message.channel.send("Ahi termine, todo limpiecito");
 }
 
-
-function musicExists() {
-	return fs.existsSync(CONSTANS.MUSIC_DIR);
-}
-
-export function isMusicInFolder() {
-	return musicExists() && fs.readdirSync(CONSTANS.MUSIC_DIR).some(fileName => fileName.endsWith('.mp3'));
+export function isMusicInFolder(guildId: string) {
+	return fs.existsSync(path.join(CONSTANS.MUSIC_DIR, guildId)) ? 
+	fs.readdirSync(path.join(CONSTANS.MUSIC_DIR, guildId)).some(f => f.endsWith('.mp3')) : 
+	false;
 }
 
 export function validateUrl(url: string): boolean {

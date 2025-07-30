@@ -1,6 +1,5 @@
-import path from 'node:path';
-import { CONSTANS, PLAY_MESSAGES } from '../../constans';
-import { searchSongByName } from '../../utils/localHandler';
+import {  PLAY_MESSAGES } from '../../constans';
+import { isMusicInFolder, searchSongByName } from '../../utils/localHandler';
 import { AudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
 import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, GuildMember, TextChannel } from 'discord.js';
 
@@ -19,9 +18,13 @@ module.exports = {
     }
     const voiceChannel = member.voice.channel;
     
-    const foundSong = searchSongByName(interaction.options.getString("nombre")!);
-    const songPath = path.join(CONSTANS.MUSIC_DIR, foundSong);
-    if(!songPath) {
+    if(!isMusicInFolder(interaction.guildId!)) {
+      interaction.reply("Che retardadin no descargaste nada todavia, te cuesta no? Usa el comando **/update** pa descargar algo");
+      return;
+    }
+
+    const foundSongPath = searchSongByName(interaction.options.getString("nombre")!, interaction.guildId!);
+    if(!foundSongPath) {
       interaction.reply("No hay ninguna cancion con un nombre como ese. Aprende a escribir pa");
       return;
     }
@@ -44,14 +47,13 @@ module.exports = {
       // };
       // queue.set(message.guild?.id!, queueContruct);
       
-      const resource = createAudioResource(songPath);
-      console.log(songPath);
+      const resource = createAudioResource(foundSongPath);
       player.play(resource);
       connection.subscribe(player);
   
       const replyMessage = PLAY_MESSAGES[Math.floor(Math.random() * PLAY_MESSAGES.length)];
   
-      interaction.reply(`${replyMessage} ** ${songPath.slice(songPath.lastIndexOf("/") + 1, songPath.lastIndexOf("."))} **`);
+      interaction.reply(`${replyMessage} ** ${foundSongPath.slice(foundSongPath.lastIndexOf("/") + 1, foundSongPath.lastIndexOf("."))} **`);
   
       player.on("error", (error: any) => {
         console.log(error)
