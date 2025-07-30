@@ -6,7 +6,6 @@ import fs from "fs";
 import path from "path";
 import { CONSTANS, PLAY_MESSAGES } from './constans';
 import { flushMusic } from './utils/localHandler';
-import { searchSongByName } from './utils/localHandler';
 
 class DSClient extends Client {
   commands = new Collection();
