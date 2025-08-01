@@ -49,7 +49,7 @@ module.exports = {
           connection: connection,
           queue: [],
           player: player,
-          playing: true
+          playing: false
         };
         
         activePlayers.set(interaction.guildId!, queueContruct);
