@@ -1,10 +1,9 @@
 require('dotenv').config();
-import { CacheType, Client, Collection, Events, GatewayIntentBits, Interaction, Message, MessageFlags, OmitPartialGroupDMChannel, VoiceBasedChannel } from 'discord.js';
-import { joinVoiceChannel ,createAudioPlayer, createAudioResource } from "@discordjs/voice";
-import { Command, Queue, Song } from './types';
+import { CacheType, Client, Collection, Events, GatewayIntentBits, Interaction, Message, MessageFlags, OmitPartialGroupDMChannel } from 'discord.js';
+import { createAudioPlayer } from "@discordjs/voice";
+import { Command, ActivePlayer, Song } from './types';
 import fs from "fs";
 import path from "path";
-import { CONSTANS, PLAY_MESSAGES } from './constans';
 import { flushMusic } from './utils/localHandler';
 
 class DSClient extends Client {
@@ -41,9 +40,8 @@ for (const folder of commandFolders) {
 
 //TODO: AGREGAR TIPO MOGOLICO!
 // VARIABLES GLOBALES
-let activePlayers = new Map<string, Queue>();
+let activePlayers = new Map<string, ActivePlayer>();
 const player = createAudioPlayer();
-const queue = new Map<string, Queue>();
 
 client.once('ready', async () => {
   console.log(`Bot conectado como ${client.user?.tag}`);
@@ -73,7 +71,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction<CacheType>) 
   }
 
   try {
-    await command.execute(interaction, player);
+    await command.execute(interaction, activePlayers);
   } catch(error) {
     console.error(error);
     if(interaction.replied || interaction.deferred) {
@@ -115,15 +113,6 @@ client.on('messageCreate', async message => {
       message.channel.send("(Consultale al gordo kocho sobre el estado las mismas, yo no tengo idea, no soy de por aca).");
       break;
 
-    case 'random':
-      if(!fs.existsSync(CONSTANS.MUSIC_DIR)) {
-        await message.reply("No descargaste nada todavia... tus viejos son primos?? usa el comando !update seguido de alguna url de playlist de youtube para descargar musica local.");
-        return;
-      }
-
-      playLocalRandom(message, voiceChannel);
-      break;
-
     case 'flush':
       try {
         flushMusic(message);
@@ -134,7 +123,7 @@ client.on('messageCreate', async message => {
       }
 
       break;
-
+      
     case 'stop':
       stopPlayer(message.guild?.id);
       message.reply('Reproducción detenida!');
@@ -154,99 +143,63 @@ client.on('messageCreate', async message => {
   }
 });
 
-async function playLocalRandom(message: OmitPartialGroupDMChannel<Message>, voiceChannel: VoiceBasedChannel) {
-  const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
-  const randomSongName = localSongs[Math.floor(Math.random() * (localSongs.length))];
-  const songPath = path.join(CONSTANS.MUSIC_DIR, randomSongName);
+// async function playLocalRandom(message: OmitPartialGroupDMChannel<Message>, voiceChannel: VoiceBasedChannel) {
+//   const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
+//   const randomSongName = localSongs[Math.floor(Math.random() * (localSongs.length))];
+//   const songPath = path.join(CONSTANS.MUSIC_DIR, randomSongName);
 
-  const connection = joinVoiceChannel({
-    channelId: voiceChannel.id,
-    guildId: voiceChannel.guild.id,
-    adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-  });
-  const queueContruct: Queue = {
-    textChannel: message.channel,
-    voiceChannel: voiceChannel,
-    connection: connection,
-    songs: [],
-    player: player,
-    playing: true
-  };
-  queue.set(message.guild?.id!, queueContruct);
+//   const connection = joinVoiceChannel({
+//     channelId: voiceChannel.id,
+//     guildId: voiceChannel.guild.id,
+//     adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+//   });
+//   const queueContruct: ActivePlayer = {
+//     textChannel: message.channel,
+//     voiceChannel: voiceChannel,
+//     connection: connection,
+//     queue: [],
+//     player: player,
+//     playing: true
+//   };
+//   queue.set(message.guild?.id!, queueContruct);
   
-  const resource = createAudioResource(songPath);
-  player.play(resource);
-  connection.subscribe(player);
+//   const resource = createAudioResource(songPath);
+//   player.play(resource);
+//   connection.subscribe(player);
 
-  message.reply(`Reproduciendo ** ${randomSongName} **`);
+//   message.reply(`Reproduciendo ** ${randomSongName} **`);
 
-  player.on("error", (error: any) => {
-    console.log(error)
-    message.channel.send('Ocurrió un error al reproducir la canción');
-    connection.destroy();
-  });
-}
-
-function playLocalSong(songPath: string, voiceChannel: VoiceBasedChannel, message: OmitPartialGroupDMChannel<Message>) {
-  try {
-    const connection = joinVoiceChannel({
-      channelId: voiceChannel.id,
-      guildId: voiceChannel.guild.id,
-      adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-    });
-    const queueContruct: Queue = {
-      textChannel: message.channel,
-      voiceChannel: voiceChannel,
-      connection: connection,
-      songs: [],
-      player: player,
-      playing: true
-    };
-    queue.set(message.guild?.id!, queueContruct);
-    
-    const resource = createAudioResource(songPath);
-    player.play(resource);
-    connection.subscribe(player);
-
-    const replyMessage = PLAY_MESSAGES[Math.floor(Math.random() * PLAY_MESSAGES.length)];
-
-    message.reply(`${replyMessage} ** ${songPath.slice(songPath.lastIndexOf("/") + 1, songPath.lastIndexOf("."))} **`);
-
-    player.on("error", (error: any) => {
-      console.log(error)
-      message.channel.send('Ocurrió un error al reproducir la canción');
-      connection.destroy();
-    });
-
-  } catch (error) {
-    console.log(error)
-    message.reply('Ocurrió un error al reproducir la música local pa!');
-  }
-}
+//   player.on("error", (error: any) => {
+//     console.log(error)
+//     message.channel.send('Ocurrió un error al reproducir la canción');
+//     connection.destroy();
+//   });
+// }
 
 function stopPlayer(guildId: string = "") {
-  const serverQueue = queue.get(guildId);
+  player.stop();
+  const serverQueue = activePlayers.get(guildId);
   if (!serverQueue) return;
   
 	//TODO: REVISAR PATRONES SETTER & GETTER
-  serverQueue.songs = [];
+  serverQueue.queue = [];
   serverQueue.player.stop();
 }
 
 function skipSong(guildId: string = "") {
-  const serverQueue = queue.get(guildId);
+  const serverQueue = activePlayers.get(guildId);
   if (!serverQueue) return;
   
   serverQueue.player.stop();
 }
 
 function showQueue(guildId: string = "", message: OmitPartialGroupDMChannel<Message>) {
-  const serverQueue = queue.get(guildId);
-  if (!serverQueue || !serverQueue.songs.length) {
+  const serverQueue = activePlayers.get(guildId);
+  if (!serverQueue || !serverQueue.queue.length) {
     return message.reply('No hay canciones en la cola!');
   }
   
-  const queueList = serverQueue.songs.map((song: Song, index: number) => {
+  const queueList = serverQueue.queue.map((song: Song, index: number) => {
     return `${index + 1}. ${song.title} (${song.local ? 'Archivo local' : song.url})`;
   }).join('\n');
   

@@ -1,17 +1,17 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { Collection, SlashCommandBuilder } from 'discord.js';
 import { AudioPlayer, VoiceConnection } from "@discordjs/voice";
 import { Channel, VoiceBasedChannel } from "discord.js";
 
 export type Command = {
   data: SlashCommandBuilder;
-  execute: (interaction: ChatInputCommandInteraction, player?: AudioPlayer) => Promise<void>;
+  execute: (interaction: ChatInputCommandInteraction, activePlayer?: Map<string, Queue>) => Promise<void>;
 };
 
-export interface Queue {
+export interface ActivePlayer {
   textChannel: Channel;
   voiceChannel: VoiceBasedChannel;
   connection?: VoiceConnection;
-  songs: Song[];
+  queue: Song[];
   player: AudioPlayer;
   playing: boolean;
 }

@@ -1,6 +1,7 @@
+import { ActivePlayer } from '../../types';
 import {  PLAY_MESSAGES } from '../../constans';
 import { isMusicInFolder, searchSongByName } from '../../utils/localHandler';
-import { AudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
+import { createAudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
 import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, GuildMember, TextChannel } from 'discord.js';
 
 module.exports = {
@@ -10,7 +11,8 @@ module.exports = {
     .addStringOption((option) => {
       return option.setName("nombre").setDescription("Nombre de la cancion a buscar (puede ser parcial)").setRequired(true)
     }),
-  async execute(interaction: ChatInputCommandInteraction<CacheType>, player: AudioPlayer) {
+
+  async execute(interaction: ChatInputCommandInteraction<CacheType>, activePlayers: Map<string, ActivePlayer>) {
     const member = interaction.member as GuildMember;
     if (!member.voice.channel) {
       interaction.reply("Metete en un channel de voz down, sino como escuchas???????");
@@ -30,34 +32,43 @@ module.exports = {
     }
     try {
       if(!interaction.channel) return;
-      const channel = interaction.channel as TextChannel;
+      const textChannel = interaction.channel as TextChannel;
 
       const connection = joinVoiceChannel({
         channelId: voiceChannel.id,
         guildId: voiceChannel.guild.id,
         adapterCreator: voiceChannel.guild.voiceAdapterCreator,
       });
-      // const queueContruct: Queue = {
-      //   textChannel: message.channel,
-      //   voiceChannel: voiceChannel,
-      //   connection: connection,
-      //   songs: [],
-      //   player: player,
-      //   playing: true
-      // };
-      // queue.set(message.guild?.id!, queueContruct);
+
+      if (!activePlayers.get(interaction.guildId!)) {
+        const player = createAudioPlayer();
+
+        const queueContruct: ActivePlayer = {
+          textChannel: textChannel,
+          voiceChannel: voiceChannel,
+          connection: connection,
+          queue: [],
+          player: player,
+          playing: true
+        };
+        
+        activePlayers.set(interaction.guildId!, queueContruct);
+      }
+
+      const serverPlayer = activePlayers.get(interaction.guildId!)!.player;
+
       
       const resource = createAudioResource(foundSongPath);
-      player.play(resource);
-      connection.subscribe(player);
+      serverPlayer.play(resource);
+      connection.subscribe(serverPlayer);
   
       const replyMessage = PLAY_MESSAGES[Math.floor(Math.random() * PLAY_MESSAGES.length)];
   
       interaction.reply(`${replyMessage} ** ${foundSongPath.slice(foundSongPath.lastIndexOf("/") + 1, foundSongPath.lastIndexOf("."))} **`);
   
-      player.on("error", (error: any) => {
+      serverPlayer.on("error", (error: any) => {
         console.log(error)
-        channel.send('Ocurrió un error al reproducir la canción');
+        textChannel.send('Ocurrió un error al reproducir la canción');
         connection.destroy();
       });
   
