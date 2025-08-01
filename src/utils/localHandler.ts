@@ -3,6 +3,7 @@ import { CONSTANS } from "../constans";
 import fs from 'fs';
 import path from "path";
 import { exec } from "youtube-dl-exec";
+import { ActivePlayer } from "@/types";
 
 export function searchSongByName(songName: string, serverId: string) {
 	const serverMusicPath = path.join(CONSTANS.MUSIC_DIR, serverId);
@@ -56,4 +57,9 @@ export function validateUrl(url: string): boolean {
   const isYoutubeLink = url.includes("youtube.com") || url.includes("youtu.be");
   const isPlaylist = url.includes("&list") || url.includes("playlist");
   return isYoutubeLink && isPlaylist;
+}
+
+export function togglePlayState(activePlayer: ActivePlayer) {
+	activePlayer.playing = !activePlayer.playing;
+	return activePlayer.playing;
 }
