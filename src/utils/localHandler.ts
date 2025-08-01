@@ -63,3 +63,9 @@ export function togglePlayState(activePlayer: ActivePlayer) {
 	activePlayer.playing = !activePlayer.playing;
 	return activePlayer.playing;
 }
+
+export function stopPlayer(activePlayer: ActivePlayer) {
+	activePlayer.player.stop();
+	activePlayer.playing = false;
+	activePlayer.queue = [];
+}
