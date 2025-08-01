@@ -1,6 +1,6 @@
 import { ActivePlayer } from '../../types';
 import {  PLAY_MESSAGES } from '../../constans';
-import { isMusicInFolder, searchSongByName } from '../../utils/localHandler';
+import { isMusicInFolder, searchSongByName, togglePlayState } from '../../utils/localHandler';
 import { createAudioPlayer, createAudioResource, joinVoiceChannel } from '@discordjs/voice';
 import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, GuildMember, TextChannel } from 'discord.js';
 
@@ -55,18 +55,18 @@ module.exports = {
         activePlayers.set(interaction.guildId!, queueContruct);
       }
 
-      const serverPlayer = activePlayers.get(interaction.guildId!)!.player;
-
+      const { player } = activePlayers.get(interaction.guildId!)!;
+      togglePlayState(activePlayers.get(interaction.guildId!)!);
       
       const resource = createAudioResource(foundSongPath);
-      serverPlayer.play(resource);
-      connection.subscribe(serverPlayer);
+      player.play(resource);
+      connection.subscribe(player);
   
       const replyMessage = PLAY_MESSAGES[Math.floor(Math.random() * PLAY_MESSAGES.length)];
   
       interaction.reply(`${replyMessage} ** ${foundSongPath.slice(foundSongPath.lastIndexOf("/") + 1, foundSongPath.lastIndexOf("."))} **`);
   
-      serverPlayer.on("error", (error: any) => {
+      player.on("error", (error: any) => {
         console.log(error)
         textChannel.send('Ocurrió un error al reproducir la canción');
         connection.destroy();
