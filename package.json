@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "dev": "nodemon dist/src/index.js",
+    "start": "concurrently \"npm run build:watch\" \"npm run dev\"",
     "build:watch": "tsc -w",
     "deploy:commands": "ts-node ./cli/deploy-commands.ts",
     "commands": "ts-node ./cli/manageCommands.ts"
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
+    "concurrently": "^9.2.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
