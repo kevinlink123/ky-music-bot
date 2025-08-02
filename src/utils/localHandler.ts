@@ -5,6 +5,13 @@ import path from "path";
 import { exec } from "youtube-dl-exec";
 import { ActivePlayer } from "@/types";
 
+export function getRandomSong(serverId: string) {
+	const serverMusicPath = path.join(CONSTANS.MUSIC_DIR, serverId);
+	const localSongs = fs.readdirSync(serverMusicPath);
+	const randomSongName = localSongs[Math.floor(Math.random() * (localSongs.length))];
+	return path.join(serverMusicPath, randomSongName);
+}
+
 export function searchSongByName(songName: string, serverId: string) {
 	const serverMusicPath = path.join(CONSTANS.MUSIC_DIR, serverId);
 	const localSongs = fs.readdirSync(serverMusicPath);
