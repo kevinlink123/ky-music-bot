@@ -42,7 +42,7 @@ module.exports = {
 
       if (!activePlayers.get(interaction.guildId!)) {
         const player = createAudioPlayer();
-
+        //TODO: Agregar el array de canciones (strings con el pathname) al queue
         const queueContruct: ActivePlayer = {
           textChannel: textChannel,
           voiceChannel: voiceChannel,
@@ -55,9 +55,12 @@ module.exports = {
         activePlayers.set(interaction.guildId!, queueContruct);
       }
 
-      const { player } = activePlayers.get(interaction.guildId!)!;
+      const currentActivePlayer = activePlayers.get(interaction.guildId!)!
+      const { player } = currentActivePlayer;
       togglePlayState(activePlayers.get(interaction.guildId!)!);
       
+      //TODO: Extraer la logica de creacion de audio resource y reproduccion
+      // playNewAudioResource(songPath, player);
       const resource = createAudioResource(foundSongPath);
       player.play(resource);
       connection.subscribe(player);
@@ -71,6 +74,14 @@ module.exports = {
         textChannel.send('Ocurrió un error al reproducir la canción');
         connection.destroy();
       });
+
+      // player.on("stateChange", (oldState, newState) => {
+      //   console.log("OLD STATE: ", oldState.status);
+      //   console.log("NEW STATE: ", newState.status);
+      //   if (newState.status === "idle") {
+      //     currentActivePlayer.player.play(createAudioResource(searchSongByName("a pelo", currentActivePlayer.voiceChannel.guildId!)));
+      //   }
+      // })
   
     } catch (error) {
       console.log(error)
