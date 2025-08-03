@@ -1,4 +1,4 @@
-import { getRandomSong, isMusicInFolder, togglePlayState } from '../../utils/localHandler';
+import { getRandomSong, isMusicInFolder } from '../../utils/localHandler';
 import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, GuildMember, TextChannel } from 'discord.js';
 import { PLAY_MESSAGES } from '../../constans';
 import { ActivePlayer } from '../../services/ActivePlayer';
