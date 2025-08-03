@@ -1,7 +1,7 @@
 require('dotenv').config();
-import { CacheType, Client, Collection, Events, GatewayIntentBits, Interaction, Message, MessageFlags, OmitPartialGroupDMChannel } from 'discord.js';
-import { createAudioPlayer } from "@discordjs/voice";
-import { Command, ActivePlayer, Song } from './types';
+import { CacheType, Client, Collection, Events, GatewayIntentBits, Interaction, MessageFlags } from 'discord.js';
+import { Command } from './types';
+import { ActivePlayer } from './services/ActivePlayer';
 import fs from "fs";
 import path from "path";
 import { flushMusic } from './utils/localHandler';
@@ -41,7 +41,6 @@ for (const folder of commandFolders) {
 //TODO: AGREGAR TIPO MOGOLICO!
 // VARIABLES GLOBALES
 let activePlayers = new Map<string, ActivePlayer>();
-const player = createAudioPlayer();
 
 client.once('ready', async () => {
   console.log(`Bot conectado como ${client.user?.tag}`);
@@ -135,7 +134,7 @@ client.on('messageCreate', async message => {
       break;
       
     case 'queue':
-      showQueue(message.guild?.id, message);
+      showQueue(message.guild?.id);
       break;
     
     default:
@@ -177,33 +176,23 @@ client.on('messageCreate', async message => {
 // }
 
 function stopPlayer(guildId: string = "") {
-  player.stop();
   const serverQueue = activePlayers.get(guildId);
   if (!serverQueue) return;
-  
-	//TODO: REVISAR PATRONES SETTER & GETTER
-  serverQueue.queue = [];
-  serverQueue.player.stop();
+  serverQueue.stopPlayer();
 }
 
 function skipSong(guildId: string = "") {
   const serverQueue = activePlayers.get(guildId);
   if (!serverQueue) return;
   
-  serverQueue.player.stop();
+  serverQueue.stopPlayer();
 }
 
-function showQueue(guildId: string = "", message: OmitPartialGroupDMChannel<Message>) {
+function showQueue(guildId: string = "") {
   const serverQueue = activePlayers.get(guildId);
-  if (!serverQueue || !serverQueue.queue.length) {
-    return message.reply('No hay canciones en la cola!');
-  }
-  
-  const queueList = serverQueue.queue.map((song: Song, index: number) => {
-    return `${index + 1}. ${song.title} (${song.local ? 'Archivo local' : song.url})`;
-  }).join('\n');
-  
-  message.channel.send(`**Cola de reproducción:**\n${queueList}`);
+  if (!serverQueue) return;
+
+  serverQueue.showQueue();
 }
 
 // Iniciar el bot con tu token

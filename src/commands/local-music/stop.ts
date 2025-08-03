@@ -1,5 +1,4 @@
-import { stopPlayer } from '../../utils/localHandler';
-import { ActivePlayer } from '../../types';
+import { ActivePlayer } from '../../services/ActivePlayer';
 import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction } from 'discord.js';
 
 module.exports = {
@@ -14,12 +13,11 @@ module.exports = {
     }
 
     try {
-      stopPlayer(activePlayer);
+      activePlayer.stopPlayer();
+      await interaction.reply("Que lindo el silencio");
     } catch(err) {
       console.error(err)
       interaction.reply('Ocurrió un error al intentar frenar el player!');
     }
-    activePlayer.player.stop();
-    await interaction.reply("Que lindo el silencio");
   }
 };
