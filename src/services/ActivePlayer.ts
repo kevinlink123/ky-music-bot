@@ -53,6 +53,8 @@ export class ActivePlayer {
     this.textChannel.send(message);
   }
 
+
+  //SETTERS & GETTERS
   getVoiceChannelId() {
     return this.voiceChannel.id;
   }
@@ -63,6 +65,10 @@ export class ActivePlayer {
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
     });
+  }
+
+  setQueue(newQueue: Song[]) {
+    this.queue = [...newQueue];
   }
 
   private setupEventListeners(): void {
