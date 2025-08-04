@@ -1,3 +1,4 @@
+import { Song } from "../types";
 import { AudioPlayer, createAudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnection } from "@discordjs/voice";
 import { TextChannel, VoiceBasedChannel } from "discord.js";
 
@@ -7,7 +8,7 @@ export class ActivePlayer {
   //@ts-ignore
   private voiceChannel: VoiceBasedChannel;
   private connection: VoiceConnection;
-  private queue: string[];
+  private queue: Song[];
   private player: AudioPlayer;
   playing: boolean = false;
 
@@ -46,7 +47,10 @@ export class ActivePlayer {
   
   showQueue() {
     this.textChannel.send("Las canciones en cola:");
-    this.textChannel.send(this.queue.join("\n"));
+    const queueMsg = this.queue.map(song => {
+      return song.title;
+    })
+    this.textChannel.send(queueMsg.join("\n"));
   }
 
   sendMessageToChannel(message: string) {
