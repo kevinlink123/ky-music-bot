@@ -19,6 +19,5 @@ export interface ActivePlayer {
 export interface Song {
   title: string;
   url: string;
-  duration: number;
   local: boolean
 }
