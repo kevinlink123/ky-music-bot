@@ -1,7 +1,8 @@
-import { getRandomSong, isMusicInFolder } from '../../utils/localHandler';
+import { getDefaultSongQueue, getRandomSong, isMusicInFolder, randomizeQueue } from '../../utils/localHandler';
 import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, GuildMember, TextChannel } from 'discord.js';
 import { PLAY_MESSAGES } from '../../constans';
 import { ActivePlayer } from '../../services/ActivePlayer';
+import { Song } from '../../types';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -43,7 +44,10 @@ module.exports = {
         currentActivePlayer.setNewConnection(currentVoiceChannel);
       }
       
-      currentActivePlayer.playSong(foundSongPath)
+      const songsQueue: Song[] = randomizeQueue(getDefaultSongQueue(interaction.guildId!));
+      currentActivePlayer.setQueue(songsQueue);
+      currentActivePlayer.playSong(foundSongPath);
+      console.log(currentActivePlayer);
   
       const replyMessage = PLAY_MESSAGES[Math.floor(Math.random() * PLAY_MESSAGES.length)];
       interaction.reply(`${replyMessage} ** ${foundSongPath.slice(foundSongPath.lastIndexOf("/") + 1, foundSongPath.lastIndexOf("."))} **`);
