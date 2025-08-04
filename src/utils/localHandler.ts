@@ -3,7 +3,7 @@ import { CONSTANS } from "../constans";
 import fs from 'fs';
 import path from "path";
 import { exec } from "youtube-dl-exec";
-import { ActivePlayer } from "@/types";
+import { ActivePlayer, Song } from "../types";
 
 export function getRandomSong(serverId: string) {
 	const serverMusicPath = path.join(CONSTANS.MUSIC_DIR, serverId);
@@ -75,4 +75,31 @@ export function stopPlayer(activePlayer: ActivePlayer) {
 	activePlayer.player.stop();
 	activePlayer.playing = false;
 	activePlayer.queue = [];
+}
+
+export function getDefaultSongQueue(serverId: string) {
+	const serverMusicFolder = path.join(CONSTANS.MUSIC_DIR, serverId);
+	return fs.readdirSync(serverMusicFolder)
+		.filter(file => file.endsWith('.mp3'))
+		.map(file => {
+			return {
+				url: path.join(serverMusicFolder, file),
+				title: file,
+				local: true
+			}
+		});
+}
+
+export function randomizeQueue(songs: Song[]) {
+	let shuffledQueue = [...songs];
+	let currentIndex = shuffledQueue.length;
+
+	while (currentIndex != 0) {
+		const randomIndex = Math.floor(Math.random() * currentIndex);
+		currentIndex--;
+
+		[shuffledQueue[currentIndex], shuffledQueue[randomIndex]] = [shuffledQueue[randomIndex], shuffledQueue[currentIndex]];
+	}
+
+	return shuffledQueue;
 }
