@@ -86,5 +86,12 @@ export class ActivePlayer {
       this.textChannel.send('Ocurrió un error al reproducir la canción');
       this.connection.destroy();
     });
+
+    this.player.on("stateChange", (_, newState) => {
+      if (newState.status === "idle") {
+        const nextSong = this.queue[this.currentTrackIndex + 1];
+        this.playSong(nextSong.url);
+      }
+    })
   }
 }
