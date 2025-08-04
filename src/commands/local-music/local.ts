@@ -1,7 +1,8 @@
 import {  PLAY_MESSAGES } from '../../constans';
-import { isMusicInFolder, searchSongByName } from '../../utils/localHandler';
+import { getDefaultSongQueue, isMusicInFolder, searchSongByName } from '../../utils/localHandler';
 import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, GuildMember, TextChannel } from 'discord.js';
 import { ActivePlayer } from '../../services/ActivePlayer';
+import { Song } from '../../types';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -45,18 +46,12 @@ module.exports = {
         currentActivePlayer.setNewConnection(currentVoiceChannel);
       }
 
+      const songsQueue: Song[] = getDefaultSongQueue(interaction.guildId!);
+      currentActivePlayer.setQueue(songsQueue);
       currentActivePlayer.playSong(foundSongPath);
-      
+
       const replyMessage = PLAY_MESSAGES[Math.floor(Math.random() * PLAY_MESSAGES.length)];
       interaction.reply(`${replyMessage} ** ${foundSongPath.slice(foundSongPath.lastIndexOf("/") + 1, foundSongPath.lastIndexOf("."))} **`);
-
-      // player.on("stateChange", (oldState, newState) => {
-      //   console.log("OLD STATE: ", oldState.status);
-      //   console.log("NEW STATE: ", newState.status);
-      //   if (newState.status === "idle") {
-      //     currentActivePlayer.player.play(createAudioResource(searchSongByName("a pelo", currentActivePlayer.voiceChannel.guildId!)));
-      //   }
-      // })
   
     } catch (error) {
       console.log(error)
