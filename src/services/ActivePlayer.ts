@@ -11,6 +11,7 @@ export class ActivePlayer {
   private queue: Song[];
   private player: AudioPlayer;
   playing: boolean = false;
+  currentTrackIndex: number = 0;
 
   constructor(guildId: string, textChannel: TextChannel, voiceChannel: VoiceBasedChannel) {
     this.guildId = guildId;
@@ -29,6 +30,9 @@ export class ActivePlayer {
   }
 
   playSong(songPath: string) {
+    this.currentTrackIndex = this.queue.findIndex(song => {
+      return song.url === songPath
+    });
     const resource = createAudioResource(songPath);
     this.player.play(resource);
     this.playing = true;
@@ -43,8 +47,9 @@ export class ActivePlayer {
     this.player.stop();
     this.playing = false;
     this.queue = [];
+    this.currentTrackIndex = 0;
   }
-  
+
   showQueue() {
     this.textChannel.send("Las canciones en cola:");
     const queueMsg = this.queue.map(song => {
