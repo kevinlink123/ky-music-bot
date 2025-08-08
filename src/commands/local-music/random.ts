@@ -47,7 +47,6 @@ module.exports = {
       const songsQueue: Song[] = randomizeQueue(getDefaultSongQueue(interaction.guildId!));
       currentActivePlayer.setQueue(songsQueue);
       currentActivePlayer.playSong(foundSongPath);
-      console.log(currentActivePlayer);
   
       const replyMessage = PLAY_MESSAGES[Math.floor(Math.random() * PLAY_MESSAGES.length)];
       interaction.reply(`${replyMessage} ** ${foundSongPath.slice(foundSongPath.lastIndexOf("/") + 1, foundSongPath.lastIndexOf("."))} **`);
