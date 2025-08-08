@@ -93,6 +93,10 @@ export class ActivePlayer {
     });
   }
 
+  getQueue() {
+    return this.queue;
+  }
+  
   setQueue(newQueue: Song[]) {
     this.queue = [...newQueue];
   }
