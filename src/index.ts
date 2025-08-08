@@ -4,7 +4,6 @@ import { Command } from './types';
 import { ActivePlayer } from './services/ActivePlayer';
 import fs from "fs";
 import path from "path";
-import { flushMusic } from './utils/localHandler';
 
 class DSClient extends Client {
   commands = new Collection();
@@ -38,8 +37,6 @@ for (const folder of commandFolders) {
 	}
 }
 
-//TODO: AGREGAR TIPO MOGOLICO!
-// VARIABLES GLOBALES
 let activePlayers = new Map<string, ActivePlayer>();
 
 client.once('ready', async () => {
@@ -111,89 +108,9 @@ client.on('messageCreate', async message => {
       message.channel.send("Los comandos **'!play'**, **'!skip'** y **'!queue'** estan disponibles pero siguen en desarrollo")
       message.channel.send("(Consultale al gordo kocho sobre el estado las mismas, yo no tengo idea, no soy de por aca).");
       break;
-
-    case 'flush':
-      try {
-        flushMusic(message);
-
-      } catch(error) {
-        console.error("Error al intentar eliminar la carpeta");
-        console.error(error);
-      }
-
-      break;
       
-    case 'stop':
-      stopPlayer(message.guild?.id);
-      message.reply('Reproducción detenida!');
-      break;
-      
-    case 'skip':
-      skipSong(message.guild?.id);
-      message.reply('Canción saltada!');
-      break;
-      
-    case 'queue':
-      showQueue(message.guild?.id);
-      break;
-    
-    default:
-      message.reply("Escribi bien el comando mogolico");
   }
 });
-
-// async function playLocalRandom(message: OmitPartialGroupDMChannel<Message>, voiceChannel: VoiceBasedChannel) {
-//   const localSongs = fs.readdirSync(CONSTANS.MUSIC_DIR);
-//   const randomSongName = localSongs[Math.floor(Math.random() * (localSongs.length))];
-//   const songPath = path.join(CONSTANS.MUSIC_DIR, randomSongName);
-
-//   const connection = joinVoiceChannel({
-//     channelId: voiceChannel.id,
-//     guildId: voiceChannel.guild.id,
-//     adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-//   });
-//   const queueContruct: ActivePlayer = {
-//     textChannel: message.channel,
-//     voiceChannel: voiceChannel,
-//     connection: connection,
-//     queue: [],
-//     player: player,
-//     playing: true
-//   };
-//   queue.set(message.guild?.id!, queueContruct);
-  
-//   const resource = createAudioResource(songPath);
-//   player.play(resource);
-//   connection.subscribe(player);
-
-//   message.reply(`Reproduciendo ** ${randomSongName} **`);
-
-//   player.on("error", (error: any) => {
-//     console.log(error)
-//     message.channel.send('Ocurrió un error al reproducir la canción');
-//     connection.destroy();
-//   });
-// }
-
-function stopPlayer(guildId: string = "") {
-  const serverQueue = activePlayers.get(guildId);
-  if (!serverQueue) return;
-  serverQueue.stopPlayer();
-}
-
-function skipSong(guildId: string = "") {
-  const serverQueue = activePlayers.get(guildId);
-  if (!serverQueue) return;
-  
-  serverQueue.stopPlayer();
-}
-
-function showQueue(guildId: string = "") {
-  const serverQueue = activePlayers.get(guildId);
-  if (!serverQueue) return;
-
-  serverQueue.showQueue();
-}
 
 // Iniciar el bot con tu token
 client.login(process.env.DS_TOKEN);
