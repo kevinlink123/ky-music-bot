@@ -22,20 +22,28 @@ export function searchSongByName(songName: string, serverId: string) {
 	return foundSong ? path.join(serverMusicPath, foundSong) : "";
 }
 
-export async function downloadFromYTPlaylist(playlistUrl: string, serverId: string) {
+export async function downloadFromYTPlaylist(playlistUrl: string, serverId: string, isPlaylist: boolean) {
 	const serverMusicFolder = path.join(CONSTANS.MUSIC_DIR, serverId);
 	if (!fs.existsSync(serverMusicFolder)) {
 		fs.mkdirSync(serverMusicFolder, { recursive: true });
 	}
 
-	console.log('Descargando playlist...');
-	await exec(playlistUrl, {
+	const downloadOptions = isPlaylist ? {
 		extractAudio: true,
 		audioFormat: 'mp3',
 		output: path.join(serverMusicFolder, '%(title)s.%(ext)s'),
-		yesPlaylist: true,
+		yesPlaylist: isPlaylist,
 		quiet: true
-	});
+	} : {
+		extractAudio: true,
+		audioFormat: 'mp3',
+		output: path.join(serverMusicFolder, '%(title)s.%(ext)s'),
+		noPlaylist: !isPlaylist,
+		quiet: true
+	}
+
+	console.log('Descargando playlist...');
+	await exec(playlistUrl, downloadOptions);
 	console.log('¡Descarga completada!');
 
 	return fs.readdirSync(serverMusicFolder)
@@ -61,9 +69,22 @@ export function isMusicInFolder(guildId: string) {
 }
 
 export function validateUrl(url: string): boolean {
-  const isYoutubeLink = url.includes("youtube.com") || url.includes("youtu.be");
-  const isPlaylist = url.includes("&list") || url.includes("playlist");
-  return isYoutubeLink && isPlaylist;
+  const isYoutubeLink = (url.includes(".com") || url.includes("https://")) || (url.includes("youtube.com") || url.includes("youtu.be"));
+  return isYoutubeLink;
+}
+
+export function isRealPlaylist(url: string) {
+	const isValidYoutubeLink = (url.includes(".com") || url.includes("https://")) || (url.includes("youtube.com") || url.includes("youtu.be"));
+	if(!isValidYoutubeLink) return false;
+
+	const urlObj = new URL(url);
+	const listParam = urlObj.searchParams.get('list');
+
+	if (!listParam) return false;
+
+	if(listParam.startsWith("RD")) return false;
+
+	return true;
 }
 
 export function getDefaultSongQueue(serverId: string) {

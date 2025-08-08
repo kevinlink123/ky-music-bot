@@ -1,4 +1,4 @@
-import { downloadFromYTPlaylist, validateUrl } from '../../utils/localHandler';
+import { downloadFromYTPlaylist, isRealPlaylist, validateUrl } from '../../utils/localHandler';
 import { SlashCommandBuilder, CacheType, ChatInputCommandInteraction, TextChannel } from 'discord.js';
 
 module.exports = {
@@ -23,7 +23,8 @@ module.exports = {
       channel.send("Ahi me puse a descargar los archivos. Podria tardar un rato...");
       channel.send("Yo aviso por aca cuando termine");
 
-      await downloadFromYTPlaylist(ytUrl, interaction.guildId!);
+      console.log(isRealPlaylist(ytUrl));
+      await downloadFromYTPlaylist(ytUrl, interaction.guildId!, isRealPlaylist(ytUrl));
 
       channel.send("LISTO PA TODO DESCARGADITO (como la cola de tu mama)");
 
