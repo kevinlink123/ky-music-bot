@@ -66,17 +66,6 @@ export function validateUrl(url: string): boolean {
   return isYoutubeLink && isPlaylist;
 }
 
-export function togglePlayState(activePlayer: ActivePlayer) {
-	activePlayer.playing = !activePlayer.playing;
-	return activePlayer.playing;
-}
-
-export function stopPlayer(activePlayer: ActivePlayer) {
-	activePlayer.player.stop();
-	activePlayer.playing = false;
-	activePlayer.queue = [];
-}
-
 export function getDefaultSongQueue(serverId: string) {
 	const serverMusicFolder = path.join(CONSTANS.MUSIC_DIR, serverId);
 	return fs.readdirSync(serverMusicFolder)
