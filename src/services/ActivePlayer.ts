@@ -50,6 +50,23 @@ export class ActivePlayer {
     this.currentTrackIndex = 0;
   }
 
+  nextSong() {
+    if (!this.queue.length) return;
+
+    const nextSongIndex = this.currentTrackIndex >= this.queue.length - 1 ? 0 : this.currentTrackIndex + 1;
+    console.log("CURRENT TRACK INDEX", this.currentTrackIndex);
+    console.log("QUEUE LENGHT", this.queue.length);
+    this.playSong(this.queue[nextSongIndex].url);
+  }
+
+  getCurrentTrack() {
+    if (!this.queue.length) return;
+
+    return this.queue.find((_, index) => {
+      return index === this.currentTrackIndex;
+    });
+  }
+
   showQueue() {
     this.textChannel.send("Las canciones en cola:");
     const queueMsg = this.queue.map(song => {
@@ -89,8 +106,7 @@ export class ActivePlayer {
 
     this.player.on("stateChange", (_, newState) => {
       if (newState.status === "idle") {
-        const nextSong = this.queue[this.currentTrackIndex + 1];
-        this.playSong(nextSong.url);
+        this.nextSong();
       }
     })
   }
