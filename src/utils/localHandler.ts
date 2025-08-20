@@ -3,7 +3,7 @@ import { CONSTANS } from "../constans";
 import fs from 'fs';
 import path from "path";
 import { exec } from "youtube-dl-exec";
-import { ActivePlayer, Song } from "../types";
+import { Song } from "../types";
 
 export function getRandomSong(serverId: string) {
 	const serverMusicPath = path.join(CONSTANS.MUSIC_DIR, serverId);
