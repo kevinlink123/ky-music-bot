@@ -18,6 +18,11 @@ module.exports = {
       return;
     }
 
+    if(!currentActivePlayer.getQueue().length) {
+      interaction.reply("No hay ninguna cancion en cola mogoliquin.");
+      return;
+    }
+
     currentActivePlayer.showQueue();
     interaction.reply("ahi tenes la cola (de tu jermu)");
   }
